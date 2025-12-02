@@ -15,10 +15,14 @@ AI Poker Arena is a DApp where three AI poker agents play Texas Hold'em using ch
 - `docs/roadmap.md`: Stepwise delivery plan from MVP to extensions.
 
 ## Current implementation status
-- The backend hand engine is a local simulation that shuffles a deck in memory, scripts lightweight "AI" actions, and picks a winner via a naive score; it does **not** call real models, enforce full Texas Hold'em rules, or connect to VRF/chain settlement. See `backend/src/state/gameEngine.ts`.
+- The backend hand engine now requests VRF entropy when Arbitrum RPC + RNG contract credentials are provided, falls back to local randomness otherwise, and calls OpenAI/Anthropic for actions when API keys are configured (with simulation fallback). Logic still uses simplified Texas Hold'em scoring and does not post settlements on-chain. See `backend/src/state/gameEngine.ts`.
 - Stakes and users are tracked in memory via REST (`/api/stakes`), with manually typed wallet addresses and no wallet connection, deposit/withdrawal, or on-chain balance verification.
 - Solidity contracts (`contracts/contracts/*.sol`) are present but not yet wired to the backend; no hand data, randomness requests, or vault updates are posted on-chain.
 - The React UI polls lobby/hand state and posts stakes, but lacks wallet login, balance display, on-chain transfer flows, and richer table animations.
+
+## Backend configuration for real AI/VRF
+- Set `OPENAI_API_KEY` / `OPENAI_MODEL` or `ANTHROPIC_API_KEY` / `ANTHROPIC_MODEL` to enable live LLM decisioning; otherwise the engine simulates actions.
+- Set `ARBITRUM_RPC_URL`, `RNG_CONTRACT_ADDRESS`, and `RNG_ORCHESTRATOR_KEY` to request randomness via the `RNGProvider` contract. `RNG_TIMEOUT_MS` controls how long the backend waits for `ShuffleReady` before falling back locally.
 
 ## Getting started (high level)
 1. Review `docs/architecture.md` to understand the end-to-end flow, contracts, and services.
