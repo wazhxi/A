@@ -8,12 +8,23 @@ export interface SeatState {
   stack: number;
 }
 
+export type Street = "preflop" | "flop" | "turn" | "river";
+
+export interface ActionLog {
+  street: Street;
+  seatId: SeatState["id"];
+  action: "fold" | "check" | "call" | "bet" | "raise";
+  amount: number;
+  reasoning: string;
+}
+
 export interface HandResult {
   handId: number;
   winner: SeatState;
   pot: number;
   board: string[];
   holes: Record<string, [string, string]>;
+  actions: ActionLog[];
 }
 
 interface EngineState {
@@ -34,6 +45,51 @@ function shuffle<T>(arr: T[]): T[] {
     [clone[i], clone[j]] = [clone[j], clone[i]];
   }
   return clone;
+}
+
+function drawDeck() {
+  return shuffle(deckRanks.flatMap((rank) => deckSuits.map((suit) => `${rank}${suit}`)));
+}
+
+function rankStrength(card: string): number {
+  const rank = card[0];
+  return deckRanks.indexOf(rank);
+}
+
+function evaluateHand(board: string[], hole: [string, string]) {
+  const combined = [...board, ...hole];
+  const sorted = combined.sort((a, b) => rankStrength(b) - rankStrength(a));
+  const top = sorted.slice(0, 2);
+  return top.reduce((sum, card) => sum + rankStrength(card), 0);
+}
+
+function pickReasoning(street: Street, action: ActionLog["action"], hand: [string, string], board: string[]) {
+  const lane =
+    street === "preflop"
+      ? `Opening with ${hand.join("/")}`
+      : `Board ${board.join(" ")} + hand ${hand.join("/")}`;
+  switch (action) {
+    case "raise":
+      return `${lane} looks strong; pressuring opponents with a raise.`;
+    case "bet":
+      return `${lane} has equity; betting to deny draws.`;
+    case "call":
+      return `${lane} is decent; calling to realize equity.`;
+    case "check":
+      return `${lane} is marginal; pot control with a check.`;
+    case "fold":
+    default:
+      return `${lane} is weak; folding this street.`;
+  }
+}
+
+function chooseAction(street: Street, stack: number, aggression: number) {
+  const roll = Math.random();
+  if (stack <= 0.5) return { action: "check" as const, betSize: 0 };
+  if (roll < aggression * 0.3) return { action: "raise" as const, betSize: Math.min(5, stack) };
+  if (roll < aggression * 0.5) return { action: "bet" as const, betSize: Math.min(3, stack) };
+  if (roll < 0.8) return { action: "call" as const, betSize: Math.min(1.5, stack) };
+  return { action: "check" as const, betSize: 0 };
 }
 
 class GameEngine {
@@ -91,9 +147,7 @@ class GameEngine {
 
   private playHand() {
     const { totals } = getTotals();
-    const pot = Object.values(totals).reduce((sum, v) => sum + v, 0);
-    const deck = shuffle(deckRanks.flatMap((rank) => deckSuits.map((suit) => `${rank}${suit}`)));
-
+    const deck = drawDeck();
     const holes: Record<string, [string, string]> = {
       ai1: [deck[0], deck[1]],
       ai2: [deck[2], deck[3]],
@@ -101,7 +155,42 @@ class GameEngine {
     };
     const board = deck.slice(6, 11);
 
-    const winner = this.state.seats[Math.floor(Math.random() * this.state.seats.length)];
+    // reset stacks to this hand's locked stakes
+    const seats = this.state.seats.map((seat, idx) => ({
+      ...seat,
+      stack: totals[seat.id] ?? 0,
+      // light personality knobs for AI flavor
+      aggression: 0.6 + idx * 0.1
+    })) as Array<SeatState & { aggression: number }>;
+
+    let pot = 0;
+    const actions: ActionLog[] = [];
+    const streets: Street[] = ["preflop", "flop", "turn", "river"];
+
+    streets.forEach((street) => {
+      seats.forEach((seat) => {
+        if (seat.stack <= 0) return;
+        const decision = chooseAction(street, seat.stack, seat.aggression);
+        const amount = Math.min(decision.betSize, seat.stack);
+        seat.stack -= amount;
+        pot += amount;
+        actions.push({
+          street,
+          seatId: seat.id,
+          action: decision.action,
+          amount,
+          reasoning: pickReasoning(street, decision.action, holes[seat.id], board)
+        });
+      });
+    });
+
+    const scored = seats.map((seat) => ({
+      seat,
+      score: evaluateHand(board, holes[seat.id])
+    }));
+    scored.sort((a, b) => b.score - a.score);
+    const winner = scored[0]?.seat ?? seats[0];
+
     const updatedSeats = this.state.seats.map((seat) =>
       seat.id === winner.id ? { ...seat, stack: seat.stack + pot } : seat
     );
@@ -116,7 +205,8 @@ class GameEngine {
         winner,
         pot,
         board,
-        holes
+        holes,
+        actions
       }
     };
 

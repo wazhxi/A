@@ -6,6 +6,13 @@ interface LatestHandState {
   pot: number;
   board: string[];
   holes: Record<string, [string, string]>;
+  actions: Array<{
+    street: "preflop" | "flop" | "turn" | "river";
+    seatId: string;
+    action: string;
+    amount: number;
+    reasoning: string;
+  }>;
 }
 
 export function LatestHand() {
@@ -66,6 +73,20 @@ export function LatestHand() {
         </div>
         <div className="winner">
           Winner: {state.winner.label} takes {state.pot} USDC
+        </div>
+        <div className="actions">
+          <h4>Decision log</h4>
+          {state.actions.map((action, idx) => (
+            <div key={`${action.seatId}-${idx}`} className="action-row">
+              <div className="meta">
+                <span className="pill">{action.street}</span>
+                <span className="pill">{action.seatId.toUpperCase()}</span>
+                <span className="pill">{action.action}</span>
+                {action.amount > 0 && <span className="pill">{action.amount} USDC</span>}
+              </div>
+              <div className="reasoning">{action.reasoning}</div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
