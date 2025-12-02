@@ -1,0 +1,14 @@
+{
+  "name": "ai-poker-arena",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "contracts",
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "lint": "echo 'Add workspace-specific lints'",
+    "test": "echo 'Run workspace tests'"
+  }
+}
