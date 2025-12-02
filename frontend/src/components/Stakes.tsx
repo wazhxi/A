@@ -11,16 +11,30 @@ interface StakeResponse {
   totals: Record<string, number>;
 }
 
+interface LobbySnapshot {
+  phase: "betting" | "playing" | "complete";
+}
+
 export function Stakes() {
   const [form, setForm] = useState<StakeFormState>({ user: "", aiId: "ai1", amount: 10 });
   const [response, setResponse] = useState<StakeResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [lobby, setLobby] = useState<LobbySnapshot | null>(null);
 
   useEffect(() => {
-    fetch("/api/stakes")
-      .then((r) => r.json())
-      .then(setResponse)
-      .catch(() => setResponse(null));
+    const interval = setInterval(() => {
+      fetch("/api/stakes")
+        .then((r) => r.json())
+        .then(setResponse)
+        .catch(() => setResponse(null));
+
+      fetch("/api/lobby/state")
+        .then((r) => r.json())
+        .then((data) => setLobby({ phase: data.phase }))
+        .catch(() => setLobby(null));
+    }, 1200);
+
+    return () => clearInterval(interval);
   }, []);
 
   const submit = (event: FormEvent) => {
@@ -75,7 +89,9 @@ export function Stakes() {
               onChange={(e) => setForm({ ...form, amount: Number(e.target.value) })}
             />
           </label>
-          <button type="submit">Lock stake</button>
+          <button type="submit" disabled={lobby?.phase !== "betting"}>
+            {lobby?.phase === "betting" ? "Lock stake" : "Betting closed"}
+          </button>
         </form>
         {error && <div className="error">{error}</div>}
         <div className="stake-totals">

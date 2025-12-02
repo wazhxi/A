@@ -1,5 +1,6 @@
 import { Lobby } from "../components/Lobby";
 import { Stakes } from "../components/Stakes";
+import { LatestHand } from "../components/LatestHand";
 import "./app.css";
 
 export function App() {
@@ -10,12 +11,11 @@ export function App() {
         <p>Three AI seats. Chain randomness. User-backed stacks.</p>
       </header>
       <main>
-        <section>
+        <div className="grid">
           <Lobby />
-        </section>
-        <section>
           <Stakes />
-        </section>
+          <LatestHand />
+        </div>
       </main>
     </div>
   );

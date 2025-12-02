@@ -1,13 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
-
-interface StakeEntry {
-  user: string;
-  aiId: string;
-  amount: number;
-}
-
-const stakeBook: StakeEntry[] = [];
+import { addStake, getTotals } from "../state/stakeStore";
+import { gameEngine } from "../state/gameEngine";
 
 const stakeSchema = z.object({
   user: z.string().min(1),
@@ -18,19 +12,21 @@ const stakeSchema = z.object({
 export const stakesRouter = Router();
 
 stakesRouter.post("/", (req, res) => {
+  if (!gameEngine.isBettingWindowOpen()) {
+    res.status(400).json({ error: "Betting window is closed" });
+    return;
+  }
+
   const parsed = stakeSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.flatten() });
     return;
   }
-  stakeBook.push(parsed.data);
-  res.json({ ok: true, count: stakeBook.length });
+  const entry = addStake(parsed.data);
+  res.json({ ok: true, entry });
 });
 
 stakesRouter.get("/", (_req, res) => {
-  const totals = stakeBook.reduce<Record<string, number>>((memo, entry) => {
-    memo[entry.aiId] = (memo[entry.aiId] || 0) + entry.amount;
-    return memo;
-  }, {});
-  res.json({ stakes: stakeBook, totals });
+  const totals = getTotals();
+  res.json({ stakes: totals.stakes, totals: totals.totals });
 });
