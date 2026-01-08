@@ -1,0 +1,179 @@
+:root {
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #0f172a;
+  background-color: #f8fafc;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: #f8fafc;
+}
+
+.app {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+header {
+  margin-bottom: 16px;
+}
+
+main {
+  display: block;
+}
+
+.grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+
+.card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+  padding: 16px;
+}
+
+.card-header {
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.seats {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.seats li {
+  padding: 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.stake-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stake-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-weight: 600;
+}
+
+.stake-form input,
+.stake-form select {
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  font-size: 14px;
+}
+
+button {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: none;
+  background: #2563eb;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #1d4ed8;
+}
+
+.error {
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.stake-totals ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.board,
+.holes {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.card-chip {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #111827;
+  color: #67e8f9;
+  font-weight: 700;
+  border: 1px solid #0ea5e9;
+  box-shadow: inset 0 0 0 1px rgba(14, 165, 233, 0.2);
+}
+
+.hole {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px;
+  background: #f8fafc;
+}
+
+.winner {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.actions {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.action-row {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px;
+  background: #f8fafc;
+}
+
+.action-row .meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  background: #e0f2fe;
+  color: #1d4ed8;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.reasoning {
+  color: #475569;
+  line-height: 1.4;
+}
